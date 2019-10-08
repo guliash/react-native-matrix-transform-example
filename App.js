@@ -16,6 +16,7 @@ class App extends React.Component {
     
     this.transformMatrix = MatrixMath.createIdentityMatrix();
     this.translateMatrix = MatrixMath.createIdentityMatrix();
+    this.scaleMatrix = MatrixMath.createIdentityMatrix();
 
     this.panResponder = PanResponder.create({
       onStartShouldSetPanResponder: () => {
@@ -80,12 +81,18 @@ class App extends React.Component {
     this.prevTranslateLocation = null;
   }
 
-  enableScale() {
-    
+  enableScale(event) {
+    this.scale = true;
+    this.scaleFactor = 1;
+    const touch1 = event.nativeEvent.touches[0];
+    const touch2 = event.nativeEvent.touches[1];
+    this.scalePrevDistance = this.dist(touch1, touch2);
   }
 
   disableScale() {
-    
+    this.scale = false;
+    this.scaleFactor = null;
+    this.scalePrevDistance = null;
   }
 
   handleTranslate(event) {
@@ -107,8 +114,42 @@ class App extends React.Component {
     this.prevTranslateLocation = { x: touch.pageX, y: touch.pageY };
   }
 
-  handleScale() {
+  handleScale(event) {
+    if (!this.scale) {
+      return;
+    }
+    
+    const touch1 = event.nativeEvent.touches[0];
+    const touch2 = event.nativeEvent.touches[1];
+    const midX = (touch1.locationX + touch2.locationX) / 2;
+    const midY = (touch1.locationY + touch2.locationY) / 2;
+    const dist = this.dist(touch1, touch2);
+    const scaleFactor = dist / this.scalePrevDistance;
 
+    let result = MatrixMath.createIdentityMatrix();
+    MatrixMath.reuseTranslate2dCommand(this.translateMatrix, -midX, -midY);
+    MatrixMath.multiplyInto(result, this.translateMatrix, this.transformMatrix);
+    this.transformMatrix = result;
+
+    result = MatrixMath.createIdentityMatrix();
+    MatrixMath.reuseScaleCommand(this.scaleMatrix, scaleFactor);
+    MatrixMath.multiplyInto(result, this.scaleMatrix, this.transformMatrix);
+    this.transformMatrix = result;
+
+    result = MatrixMath.createIdentityMatrix();
+    MatrixMath.reuseTranslate2dCommand(this.translateMatrix, midX, midY);
+    MatrixMath.multiplyInto(result, this.translateMatrix, this.transformMatrix);
+    this.transformMatrix = result;
+
+    this.transformView.setNativeProps({ style: { transform: [ { matrix: this.transformMatrix } ] } });
+    this.scalePrevDistance = dist;
+  }
+
+  dist(touch1, touch2) {
+    return Math.hypot(
+      touch1.pageX - touch2.pageX,
+      touch1.pageY - touch2.pageY
+    );
   }
 
   render() {

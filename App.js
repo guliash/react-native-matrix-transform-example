@@ -128,7 +128,7 @@ class App extends React.Component {
 
     let result = MatrixMath.createIdentityMatrix();
     MatrixMath.reuseTranslate2dCommand(this.translateMatrix, -midX, -midY);
-    MatrixMath.multiplyInto(result, this.translateMatrix, this.transformMatrix);
+    MatrixMath.multiplyInto(result, this.transformMatrix, this.translateMatrix);
     this.transformMatrix = result;
 
     result = MatrixMath.createIdentityMatrix();
@@ -138,7 +138,7 @@ class App extends React.Component {
 
     result = MatrixMath.createIdentityMatrix();
     MatrixMath.reuseTranslate2dCommand(this.translateMatrix, midX, midY);
-    MatrixMath.multiplyInto(result, this.translateMatrix, this.transformMatrix);
+    MatrixMath.multiplyInto(result, this.transformMatrix, this.translateMatrix);
     this.transformMatrix = result;
 
     this.transformView.setNativeProps({ style: { transform: [ { matrix: this.transformMatrix } ] } });

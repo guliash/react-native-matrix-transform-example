@@ -6,13 +6,23 @@ import {
 } from 'react-native';
 import MatrixMath from 'react-native/Libraries/Utilities/MatrixMath';
 
+const VIEW_WIDTH = 100;
+const VIEW_HEIGHT = 100;
+
 class App extends React.Component {
 
   constructor(props) {
     super(props);
 
+    this.state = {
+      containerWidth: null,
+      containerHeight: null
+    };
+
     this.translate = false;
     this.prevTranslateLocation = null;
+
+    this.scalePrevDistance = null;
     
     this.transformMatrix = MatrixMath.createIdentityMatrix();
     this.translateMatrix = MatrixMath.createIdentityMatrix();
@@ -83,7 +93,6 @@ class App extends React.Component {
 
   enableScale(event) {
     this.scale = true;
-    this.scaleFactor = 1;
     const touch1 = event.nativeEvent.touches[0];
     const touch2 = event.nativeEvent.touches[1];
     this.scalePrevDistance = this.dist(touch1, touch2);
@@ -91,7 +100,6 @@ class App extends React.Component {
 
   disableScale() {
     this.scale = false;
-    this.scaleFactor = null;
     this.scalePrevDistance = null;
   }
 
@@ -104,9 +112,44 @@ class App extends React.Component {
     const diffX = touch.pageX - this.prevTranslateLocation.x;
     const diffY = touch.pageY - this.prevTranslateLocation.y;
 
-    const result = MatrixMath.createIdentityMatrix();
-    MatrixMath.reuseTranslate2dCommand(this.translateMatrix, diffX, diffY);
-    MatrixMath.multiplyInto(result, this.translateMatrix, this.transformMatrix);
+    let applyDiffX = diffX;
+    let applyDiffY = diffY;
+
+    let result = this.translatePost(diffX, diffY);
+
+    const transformedTopLeft = MatrixMath.multiplyVectorByMatrix(
+      [
+        this.state.containerWidth / 2 - VIEW_WIDTH / 2,
+        this.state.containerHeight / 2 - VIEW_HEIGHT / 2,
+        1,
+        1
+      ],
+      result
+    );
+    if (transformedTopLeft[0] < 0) {
+      applyDiffX = 0;
+    }
+    if (transformedTopLeft[1] < 0) {
+      applyDiffY = 0;
+    }
+
+    const transformedBottomRight = MatrixMath.multiplyVectorByMatrix(
+      [
+        this.state.containerWidth / 2 + VIEW_WIDTH / 2,
+        this.state.containerHeight / 2 + VIEW_HEIGHT / 2,
+        1,
+        1
+      ],
+      result
+    );
+    if (transformedBottomRight[0] > this.state.containerWidth) {
+      applyDiffX = 0;
+    }
+    if (transformedBottomRight[1] > this.state.containerHeight) {
+      applyDiffY = 0;
+    }
+
+    result = this.translatePost(applyDiffX, applyDiffY);
 
     this.transformMatrix = result;
 
@@ -152,12 +195,24 @@ class App extends React.Component {
     );
   }
 
+  translatePost(diffX, diffY) {
+    const result = MatrixMath.createIdentityMatrix();
+    MatrixMath.reuseTranslate2dCommand(this.translateMatrix, diffX, diffY);
+    MatrixMath.multiplyInto(result, this.translateMatrix, this.transformMatrix);
+    return result;
+  }
+
   render() {
     return (
-      <View style={ styles.container } { ...this.panResponder.panHandlers }>
-        <View style={ styles.box } ref={ it => this.transformView = it }>
-          
-        </View>
+      <View
+        style={ styles.container } { ...this.panResponder.panHandlers }
+        onLayout={
+          event => this.setState({
+            containerWidth: event.nativeEvent.layout.width,
+            containerHeight: event.nativeEvent.layout.height
+          })
+        }>
+        <View style={ styles.box } ref={ it => this.transformView = it } />
       </View>
     );
   }
@@ -172,8 +227,8 @@ const styles = StyleSheet.create({
   },
   box: {
     backgroundColor: 'orange',
-    width: 100,
-    height: 100
+    width: VIEW_WIDTH,
+    height: VIEW_HEIGHT
   }
 });
 

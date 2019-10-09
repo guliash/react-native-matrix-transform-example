@@ -22,8 +22,8 @@ class App extends React.Component {
     this.prevTouchPageX = null;
     this.prevTouchPageY = null;
 
-    this.x = null;
-    this.y = null;
+    this.centerX = null;
+    this.centerY = null;
 
     this.isScaling = false;
     this.scale = 1;
@@ -116,11 +116,11 @@ class App extends React.Component {
     const diffX = touch.pageX - this.prevTouchPageX;
     const diffY = touch.pageY - this.prevTouchPageY;
 
-    this.x += diffX;
-    this.y += diffY;
+    this.centerX += diffX;
+    this.centerY += diffY;
 
     this.transformView.setNativeProps(
-      { style: { transform: [ { translateX: this.x }, { translateY: this.y } ] } }
+      { style: { transform: [ { translateX: this.centerX }, { translateY: this.centerY }, { scale: this.scale } ] } }
     );
 
     this.prevTouchPageX = touch.pageX;
@@ -128,7 +128,28 @@ class App extends React.Component {
   }
 
   handleScale(event) {
-   
+    if (!this.isScaling) {
+      return;
+    }
+
+    const touch1 = event.nativeEvent.touches[0];
+    const touch2 = event.nativeEvent.touches[1];
+    const dist = this.dist(touch1, touch2);
+    const midX = (touch1.pageX + touch2.pageX) / 2;
+    const midY = (touch1.pageY + touch2.pageY) / 2;
+    const scaleFactor = dist / this.scalePrevDistance;
+
+    const diffX = this.centerX - midX;
+    const diffY = this.centerY - midY;
+
+    this.centerX += diffX * scaleFactor - diffX;
+    this.centerY += diffY * scaleFactor - diffY;
+    this.scale *= scaleFactor;
+    this.scalePrevDistance = dist;
+
+    this.transformView.setNativeProps(
+      { style: { transform: [ { translateX: this.centerX }, { translateY: this.centerY }, { scale: this.scale } ] } }
+    );
   }
 
   dist(touch1, touch2) {
@@ -150,8 +171,8 @@ class App extends React.Component {
               containerWidth: width,
               containerHeight: height
             });
-            this.x = 0;
-            this.y = 0;
+            this.centerX = VIEW_WIDTH / 2;
+            this.y = VIEW_HEIGHT / 2;
           }
         }>
         <View

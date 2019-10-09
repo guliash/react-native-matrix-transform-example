@@ -112,46 +112,7 @@ class App extends React.Component {
     const diffX = touch.pageX - this.prevTranslateLocation.x;
     const diffY = touch.pageY - this.prevTranslateLocation.y;
 
-    let applyDiffX = diffX;
-    let applyDiffY = diffY;
-
-    let result = this.translatePost(diffX, diffY);
-
-    const transformedTopLeft = MatrixMath.multiplyVectorByMatrix(
-      [
-        this.state.containerWidth / 2 - VIEW_WIDTH / 2,
-        this.state.containerHeight / 2 - VIEW_HEIGHT / 2,
-        1,
-        1
-      ],
-      result
-    );
-    if (transformedTopLeft[0] < 0) {
-      applyDiffX = 0;
-    }
-    if (transformedTopLeft[1] < 0) {
-      applyDiffY = 0;
-    }
-
-    const transformedBottomRight = MatrixMath.multiplyVectorByMatrix(
-      [
-        this.state.containerWidth / 2 + VIEW_WIDTH / 2,
-        this.state.containerHeight / 2 + VIEW_HEIGHT / 2,
-        1,
-        1
-      ],
-      result
-    );
-    if (transformedBottomRight[0] > this.state.containerWidth) {
-      applyDiffX = 0;
-    }
-    if (transformedBottomRight[1] > this.state.containerHeight) {
-      applyDiffY = 0;
-    }
-
-    result = this.translatePost(applyDiffX, applyDiffY);
-
-    this.transformMatrix = result;
+    this.transformMatrix = this.translatePost(diffX, diffY);
 
     this.transformView.setNativeProps({ style: { transform: [ { matrix: this.transformMatrix } ] } });
     this.prevTranslateLocation = { x: touch.pageX, y: touch.pageY };
@@ -164,8 +125,8 @@ class App extends React.Component {
     
     const touch1 = event.nativeEvent.touches[0];
     const touch2 = event.nativeEvent.touches[1];
-    const midX = (touch1.locationX + touch2.locationX) / 2;
-    const midY = (touch1.locationY + touch2.locationY) / 2;
+    const midX = (touch1.pageX + touch2.pageX) / 2;
+    const midY = (touch1.pageY + touch2.pageY) / 2;
     const dist = this.dist(touch1, touch2);
     const scaleFactor = dist / this.scalePrevDistance;
 

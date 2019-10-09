@@ -120,7 +120,7 @@ class App extends React.Component {
     this.centerY += diffY;
 
     this.transformView.setNativeProps(
-      { style: { transform: [ { translateX: this.centerX }, { translateY: this.centerY }, { scale: this.scale } ] } }
+      { style: { transform: [ { translateX: this.centerX - VIEW_WIDTH / 2 }, { translateY: this.centerY - VIEW_HEIGHT / 2 }, { scale: this.scale } ] } }
     );
 
     this.prevTouchPageX = touch.pageX;
@@ -148,7 +148,7 @@ class App extends React.Component {
     this.scalePrevDistance = dist;
 
     this.transformView.setNativeProps(
-      { style: { transform: [ { translateX: this.centerX }, { translateY: this.centerY }, { scale: this.scale } ] } }
+      { style: { transform: [ { translateX: this.centerX - VIEW_WIDTH / 2 }, { translateY: this.centerY - VIEW_HEIGHT / 2 }, { scale: this.scale } ] } }
     );
   }
 
@@ -172,7 +172,7 @@ class App extends React.Component {
               containerHeight: height
             });
             this.centerX = VIEW_WIDTH / 2;
-            this.y = VIEW_HEIGHT / 2;
+            this.centerY = VIEW_HEIGHT / 2;
           }
         }>
         <View
